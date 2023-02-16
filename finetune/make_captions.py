@@ -67,16 +67,12 @@ def main(args):
   if not os.path.exists("blip"):
     args.train_data_dir = os.path.abspath(args.train_data_dir)        # convert to absolute path
 
-    cwd = os.getcwd()
-    print('Current Working Directory is: ', cwd)
-    os.chdir('finetune')
-
   print(f"load images from {args.train_data_dir}")
   image_paths = train_util.glob_images(args.train_data_dir)
   print(f"found {len(image_paths)} images.")
 
   print(f"loading BLIP caption: {args.caption_weights}")
-  model = blip_decoder(pretrained=args.caption_weights, image_size=IMAGE_SIZE, vit='large', med_config="./blip/med_config.json")
+  model = blip_decoder(pretrained=args.caption_weights, image_size=IMAGE_SIZE, vit='large', med_config="./finetune/blip/med_config.json")
   model.eval()
   model = model.to(DEVICE)
   print("BLIP loaded")
