@@ -1,18 +1,19 @@
 import os
 import subprocess
+import sys
 
 
 def caption_images(
     train_data_dir,
-    prefix = '',
-    postfix = '',
-    caption_file_ext = '.txt',
-    batch_size = 1,
-    max_length = 75,
-    min_length = 5,
-    top_p = 0.9,
-    beam_search = True,
-    num_beams = 1,
+    prefix='',
+    postfix='',
+    caption_file_ext='.txt',
+    batch_size=1,
+    max_length=75,
+    min_length=5,
+    top_p=0.9,
+    beam_search=True,
+    num_beams=1,
 ):
     if train_data_dir == '':
         print('Image folder is missing')
@@ -50,6 +51,7 @@ def caption_images(
 
     print('Captioning done')
 
+
 def has_ext_files(directory, extension):
     # Iterate through all the files in the directory
     for file in os.listdir(directory):
@@ -58,6 +60,7 @@ def has_ext_files(directory, extension):
             return True
     # If no extension files were found, return False
     return False
+
 
 def add_pre_postfix(
     folder='', prefix='', postfix='', caption_file_ext='.txt'
@@ -84,3 +87,12 @@ def add_pre_postfix(
             f.seek(0, 0)
             f.write(f'{prefix}{content}{postfix}')
     f.close()
+
+
+def main():
+    caption_images(
+        train_data_dir=sys.argv[1], prefix=sys.argv[2])
+
+
+if __name__ == "__main__":
+    main()

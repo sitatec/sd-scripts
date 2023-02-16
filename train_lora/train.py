@@ -4,7 +4,6 @@ import os
 import subprocess
 import pathlib
 import shutil
-import sys
 from blip_captioning import caption_images
 
 
