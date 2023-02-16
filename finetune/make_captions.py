@@ -72,7 +72,7 @@ def main(args):
   print(f"found {len(image_paths)} images.")
 
   print(f"loading BLIP caption: {args.caption_weights}")
-  model = blip_decoder(pretrained=args.caption_weights, image_size=IMAGE_SIZE, vit='large', med_config="./finetune/blip/med_config.json")
+  model = blip_decoder(pretrained=args.caption_weights, image_size=IMAGE_SIZE, vit='large', med_config="../finetune/blip/med_config.json")
   model.eval()
   model = model.to(DEVICE)
   print("BLIP loaded")
