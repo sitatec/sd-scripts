@@ -3,7 +3,7 @@
   "v2": false,
   "v_parameterization": false,
   "logging_dir": "~/models/log",
-  "train_data_dir": "~/training_data",
+  "train_data_dir": "~/training_data/Arikytsya",
   "reg_data_dir": "",
   "output_dir": "~/models/Arikytsya",
   "max_resolution": "512,512",

@@ -410,6 +410,11 @@ def main():
         print('Loading config...')
         config = json.load(config_file)
 
+    config['train_data_dir'] = os.path.expanduser(config['train_data_dir'])
+    config['output_dir'] = os.path.expanduser(config['output_dir'])
+    config['reg_data_dir'] = os.path.expanduser(config['reg_data_dir'])
+    config['logging_dir'] = os.path.expanduser(config['logging_dir'])
+
     caption_images(
         train_data_dir=config['train_data_dir'], prefix=config['output_name'])
     train_model(**config)
