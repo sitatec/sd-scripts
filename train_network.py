@@ -413,12 +413,15 @@ def train(args):
 
     noise_scheduler = DDPMScheduler(beta_start=0.00085, beta_end=0.012, beta_schedule="scaled_linear",
                                     num_train_timesteps=1000, clip_sample=False)
-
+    print('### ---- Initializing training ---- ###')
     if accelerator.is_main_process:
+        print('### ---- is_main_process:  accelerator.init_trackers("network_train") ---- ###')
         accelerator.init_trackers("network_train")
 
     loss_list = []
     loss_total = 0.0
+    
+    print('### ---- Starting Epoch ---- ###')
     for epoch in range(num_train_epochs):
         print(f"epoch {epoch+1}/{num_train_epochs}")
         train_dataset.set_current_epoch(epoch + 1)
@@ -427,14 +430,18 @@ def train(args):
 
         network.on_epoch_start(text_encoder, unet)
 
+        print('### ---- Starting iterating train_dataloader ---- ###')
         for step, batch in enumerate(train_dataloader):
             with accelerator.accumulate(network):
                 with torch.no_grad():
                     if "latents" in batch and batch["latents"] is not None:
+                        
+                        print('### ---- Running: batch["latents"].to(accelerator.device) ---- ###')
                         latents = batch["latents"].to(accelerator.device)
                     else:
                         # latentに変換
-                        latents = vae.encode(batch["images"].to(
+                        print('### ---- Running: vae.encode(batch["images"].to(accelerator.device, dtype=weight_dtype)).latent_dist.sample() ---- ###')
+                        latents = vae.encode(batch["images"].to(accelerator.device,
                             dtype=weight_dtype)).latent_dist.sample()
                     latents = latents * 0.18215
                 b_size = latents.shape[0]
@@ -568,7 +575,7 @@ def train(args):
     if is_main_process:
         os.makedirs(args.output_dir, exist_ok=True)
 
-        model_name = train_util.DEFAULT_LAST_OUTPUT_NAME if args.output_name is None else args.output_name
+        model_name = train_util.DEFAULT_LAST_OUTPUT_NAME if args.output_name is None else args.output_name/pricing
         ckpt_name = model_name + '.' + args.save_model_as
         ckpt_file = os.path.join(args.output_dir, ckpt_name)
 
