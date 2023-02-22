@@ -505,7 +505,7 @@ class BaseDataset(torch.utils.data.Dataset):
       image = self.trim_and_resize_if_required(image, info.bucket_reso, info.resized_size)
 
       img_tensor = self.image_transforms(image)
-      img_tensor = img_tensor.unsqueeze(0).to(device=vae.device, dtype=vae.dtype)
+      img_tensor = img_tensor.unsqueeze(0)
       info.latents = vae.encode(img_tensor).latent_dist.sample().squeeze(0).to("cpu")
 
       if self.flip_aug:
@@ -663,7 +663,7 @@ class BaseDataset(torch.utils.data.Dataset):
 
     if images[0] is not None:
       images = torch.stack(images)
-      images = images.to(memory_format=torch.contiguous_format).float()
+      images = images.float()
     else:
       images = None
     example['images'] = images
@@ -1282,12 +1282,10 @@ def replace_unet_cross_attn_to_memory_efficient():
     q = self.to_q(x)
 
     context = context if context is not None else x
-    context = context.to(x.dtype)
 
     if hasattr(self, 'hypernetwork') and self.hypernetwork is not None:
       context_k, context_v = self.hypernetwork.forward(x, context)
-      context_k = context_k.to(x.dtype)
-      context_v = context_v.to(x.dtype)
+
     else:
       context_k = context
       context_v = context
@@ -1322,12 +1320,10 @@ def replace_unet_cross_attn_to_xformers():
     q_in = self.to_q(x)
 
     context = default(context, x)
-    context = context.to(x.dtype)
 
     if hasattr(self, 'hypernetwork') and self.hypernetwork is not None:
       context_k, context_v = self.hypernetwork.forward(x, context)
-      context_k = context_k.to(x.dtype)
-      context_v = context_v.to(x.dtype)
+
     else:
       context_k = context
       context_v = context
@@ -1658,7 +1654,7 @@ def get_hidden_states(args: argparse.Namespace, input_ids, tokenizer, text_encod
 
   if weight_dtype is not None:
     # this is required for additional network training
-    encoder_hidden_states = encoder_hidden_states.to(weight_dtype)
+    encoder_hidden_states = encoder_hidden_states
 
   return encoder_hidden_states
 

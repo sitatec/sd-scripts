@@ -162,14 +162,11 @@ def train(args):
     text_encoder, vae, unet, _ = train_util.load_target_model(
         args, weight_dtype)
     # unnecessary, but work on low-ram device
-    text_encoder.to(accelerator.device)
-    unet.to(accelerator.device)
     # モデルに xformers とか memory efficient attention を組み込む
     train_util.replace_unet_modules(unet, args.mem_eff_attn, args.xformers)
 
     # 学習を準備する
     if cache_latents:
-        vae.to(accelerator.device, dtype=weight_dtype)
         vae.requires_grad_(False)
         vae.eval()
         with torch.no_grad():
@@ -253,7 +250,6 @@ def train(args):
     if args.full_fp16:
         assert args.mixed_precision == "fp16", "full_fp16 requires mixed precision='fp16' / full_fp16を使う場合はmixed_precision='fp16'を指定してください。"
         print("enable full fp16 training.")
-        network.to(weight_dtype)
 
     # acceleratorがなんかよろしくやってくれるらしい
     if train_unet and train_text_encoder:
@@ -270,9 +266,7 @@ def train(args):
             network, optimizer, train_dataloader, lr_scheduler)
 
     unet.requires_grad_(False)
-    unet.to(accelerator.device, dtype=weight_dtype)
     text_encoder.requires_grad_(False)
-    text_encoder.to(accelerator.device)
     # according to TI example in Diffusers, train is required
     if args.gradient_checkpointing:
         unet.train()
@@ -298,7 +292,7 @@ def train(args):
     if not cache_latents:
         vae.requires_grad_(False)
         vae.eval()
-        vae.to(accelerator.device, dtype=weight_dtype)
+        vae.to(accelerator.device)
 
     # 実験的機能：勾配も含めたfp16学習を行う　PyTorchにパッチを当ててfp16でのgrad scaleを有効にする
     if args.full_fp16:
@@ -437,18 +431,17 @@ def train(args):
                     if "latents" in batch and batch["latents"] is not None:
                         
                         print('### ---- Running: batch["latents"].to(accelerator.device) ---- ###')
-                        latents = batch["latents"].to(accelerator.device)
+                        latents = batch["latents"]
                     else:
                         # latentに変換
                         print('### ---- Running: vae.encode(batch["images"].to(accelerator.device, dtype=weight_dtype)).latent_dist.sample() ---- ###')
-                        latents = vae.encode(batch["images"].to(accelerator.device,
-                            dtype=weight_dtype)).latent_dist.sample()
+                        latents = vae.encode(batch["images"]).latent_dist.sample()
                     latents = latents * 0.18215
                 b_size = latents.shape[0]
 
                 with torch.set_grad_enabled(train_text_encoder):
                     # Get the text embedding for conditioning
-                    input_ids = batch["input_ids"].to(accelerator.device)
+                    input_ids = batch["input_ids"]
                     encoder_hidden_states = train_util.get_hidden_states(
                         args, input_ids, tokenizer, text_encoder, weight_dtype)
 
@@ -471,10 +464,14 @@ def train(args):
                     latents, noise, timesteps)
 
                 # Predict the noise residual
+                print("### ----- Running: autocast()  ---- ###")
                 with autocast():
+                    print("### ----- Inside: autocast() - Before - unet(noisy_latents, timesteps, encoder_hidden_states).sample ---- ###")
                     noise_pred = unet(noisy_latents, timesteps,
                                       encoder_hidden_states).sample
+                    print("### ----- Inside: autocast() - After - unet(noisy_latents, timesteps, encoder_hidden_states).sample ---- ###")
 
+                print("### ----- Finished autocast()  ---- ###")
                 if args.v_parameterization:
                     # v-parameterization training
                     target = noise_scheduler.get_velocity(
