@@ -170,7 +170,10 @@ def train_model(
     lr_warmup_steps = round(float(int(lr_warmup) * int(max_train_steps) / 100))
     print(f'lr_warmup_steps = {lr_warmup_steps}')
 
-    run_cmd = f'accelerate launch --tpu --main_training_function="main" "../train_network_tpu.py"'
+    if os.path.exists("train_network_tpu.py"):
+        run_cmd = f'accelerate launch --tpu --main_training_function="main" "train_network_tpu.py"'
+    else:
+        run_cmd = f'accelerate launch --tpu --main_training_function="main" "../train_network_tpu.py"'
 
     # run_cmd += f' --caption_dropout_rate="0.1" --caption_dropout_every_n_epochs=1'   # --random_crop'
 
@@ -406,6 +409,9 @@ def save_inference_file(output_dir, v2, v_parameterization, output_name):
 
 def main():
     config_file_path = 'default_config.json'
+
+    if not os.path.exists(config_file_path):
+        config_file_path = 'train_lora/' + config_file_path
 
     with open(config_file_path, 'r') as config_file:
         print('Loading config...')
