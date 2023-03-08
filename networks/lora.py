@@ -7,6 +7,7 @@ import math
 import os
 from typing import List
 import torch
+import torch_xla.core.xla_model as xm
 
 from library import train_util
 
@@ -239,4 +240,4 @@ class LoRANetwork(torch.nn.Module):
 
       save_file(state_dict, file, metadata)
     else:
-      torch.save(state_dict, file)
+      xm.save(state_dict, file)
